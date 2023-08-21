@@ -27,21 +27,21 @@ headers = {
 URL = "https://github.com/backend-br/vagas/issues?q=is%3Aissue+email+OR+mail+in%3Abody+label%3APython"
 site = requests.get(URL, headers=headers, timeout=10)
 soup = BeautifulSoup(site.content, "html.parser")
-issues_open = (
+open_issues = (
     soup.find("div", class_="flex-auto d-none d-lg-block no-wrap")
     .text.strip()
     .split(" ")[0]
 )
-issues_closed = (
+closed_issues = (
     soup.find("div", class_="flex-auto d-none d-lg-block no-wrap")
     .text.strip()
     .split(" ")[-2]
 )
-issues_total = int(issues_open) + int(issues_closed)
-print(issues_total)
-if issues_total > 25:
+total_issues = int(open_issues) + int(closed_issues)
+print(f"total issues: {total_issues}")
+if total_issues > 25:
     last_page = soup.find("div", class_="pagination").text.strip().split(" ")[-2]
-    print(last_page)
+    print(f"Total pages{last_page}")
 
 for page in range(1, int(last_page) + 1):
     print(f"Page: {page}")
