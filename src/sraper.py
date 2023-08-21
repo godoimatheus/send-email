@@ -1,14 +1,30 @@
 import re
-import requests
+import os
+from datetime import datetime
 from bs4 import BeautifulSoup
+import requests
+import pymongo
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+from pymongo.errors import PyMongoError
 
+uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
+client = MongoClient(uri, server_api=ServerApi("1"))
+try:
+    client.admin.command("ping")
+    print("Conectando ao banco de dados")
+except Exception as e:
+    print(e)
+db = client["issues"]
+collection = db["vagas"]
+db["vagas"].create_index([("issue_number", pymongo.ASCENDING)], unique=True)
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
 }
 
-URL = "https://github.com/backend-br/vagas/issues?q=is%3Aissue+mail+in%3Abody+label%3APython"
+URL = "https://github.com/backend-br/vagas/issues?q=is%3Aissue+email+OR+mail+in%3Abody+label%3APython"
 site = requests.get(URL, headers=headers, timeout=10)
 soup = BeautifulSoup(site.content, "html.parser")
 issues_open = (
@@ -29,7 +45,7 @@ if issues_total > 25:
 
 for page in range(1, int(last_page) + 1):
     print(f"Page: {page}")
-    URL = f"https://github.com/backend-br/vagas/issues?page={page}&q=is%3Aissue+mail+in%3Abody+label%3APython"
+    URL = f"https://github.com/backend-br/vagas/issues?page={page}&q=is%3Aissue+email+OR+mail+in%3Abody+label%3APython"
     site = requests.get(URL, headers=headers, timeout=10)
     soup = BeautifulSoup(site.content, "html.parser")
     jobs = soup.find_all(
@@ -52,7 +68,8 @@ for page in range(1, int(last_page) + 1):
         print(title)
 
         opened = job.find("relative-time").get("datetime")
-        print(opened)
+        issue_date = datetime.strptime(opened, "%Y-%m-%dT%H:%M:%SZ")
+        print(issue_date)
 
         labels = job.find_all("a", class_="IssueLabel hx_IssueLabel")
         labels_list = []
@@ -65,8 +82,7 @@ for page in range(1, int(last_page) + 1):
 
         URL_GITHUB = "https://github.com"
 
-        author_link = job.find("a", class_="Link--muted").get("href")
-        url_author = URL_GITHUB + author_link
+        url_author = URL_GITHUB + "/" + author
         print(url_author)
 
         link_job = job.find(
@@ -84,4 +100,22 @@ for page in range(1, int(last_page) + 1):
         except AttributeError:
             EMAIL = "not found"
             print(EMAIL)
+        search_time = datetime.utcnow()
+        try:
+            db["vagas"].insert_one(
+                {
+                    "issue_number": issue_number,
+                    "status": status,
+                    "title": title,
+                    "last_update": issue_date,
+                    "labels": labels_list,
+                    "author": author,
+                    "author_page": url_author,
+                    "email": EMAIL,
+                    "url_issue": url_job,
+                    "search_time": search_time,
+                }
+            )
+        except PyMongoError as erro:
+            print(erro)
         print()
