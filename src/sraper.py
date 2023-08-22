@@ -6,7 +6,7 @@ import requests
 import pymongo
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from pymongo.errors import PyMongoError
+from pymongo.errors import DuplicateKeyError
 
 uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
 client = MongoClient(uri, server_api=ServerApi("1"))
@@ -116,6 +116,21 @@ for page in range(1, int(last_page) + 1):
                     "search_time": search_time,
                 }
             )
-        except PyMongoError as erro:
-            print(erro)
+        except DuplicateKeyError:
+            db["vagas"].update_one(
+                {"issue_number": issue_number},
+                {
+                    "$set": {
+                        "status": status,
+                        "title": title,
+                        "last_update": issue_date,
+                        "labels": labels_list,
+                        "author": author,
+                        "author_page": url_author,
+                        "email": EMAIL,
+                        "url_issue": url_job,
+                        "search_time": search_time,
+                    }
+                },
+            )
         print()
