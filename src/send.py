@@ -19,19 +19,19 @@ collection = db["vagas"]
 def send_email():
     email_list = collection.distinct("email")
     for email_issues in email_list:
-        body_email = "Olá"
+        body_email = "áéíóú"
         msg = email.message.Message()
         msg["Subject"] = "Assunto"
         msg["From"] = MY_EMAIL
         msg["To"] = email_issues
         password = MY_PASSWORD
-        msg.add_header("Content-Type", "text/html")
-        msg.set_payload(body_email)
+        msg.add_header("Content-Type", "text/html; charset=utf-8")
+        msg.set_payload(body_email, "utf-8")
         smtp = smtplib.SMTP("smtp.gmail.com: 587")
         smtp.starttls()
         smtp.login(msg["From"], password)
         smtp.sendmail([msg["From"]], [msg["To"]], msg.as_string().encode("utf-8"))
-        print(f"Send email to: {email_issues}")
+        print(f"Sending email to: {email_issues}")
     print("Finished sending the emails")
 
 
