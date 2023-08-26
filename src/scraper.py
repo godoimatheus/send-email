@@ -45,23 +45,39 @@ soup = scraping_site(
     "https://github.com/backend-br/vagas/issues?q=is%3Aissue+email+OR+mail+in%3Abody+label%3APython"
 )
 
-open_issues = (
-    soup.find("div", class_="flex-auto d-none d-lg-block no-wrap")
-    .text.strip()
-    .split(" ")[0]
-)
-closed_issues = (
-    soup.find("div", class_="flex-auto d-none d-lg-block no-wrap")
-    .text.strip()
-    .split(" ")[-2]
-)
-total_issues = int(open_issues) + int(closed_issues)
-print(f"total issues: {total_issues}")
-if total_issues > 25:
-    last_page = soup.find("div", class_="pagination").text.strip().split(" ")[-2]
-    print(f"Total pages: {last_page}")
 
-for page in range(1, int(last_page) + 1):
+def number_of_issues():
+    open_issues = (
+        soup.find("div", class_="flex-auto d-none d-lg-block no-wrap")
+        .text.strip()
+        .split(" ")[0]
+    )
+    print(f"Open issues: {open_issues}")
+    closed_issues = (
+        soup.find("div", class_="flex-auto d-none d-lg-block no-wrap")
+        .text.strip()
+        .split(" ")[-2]
+    )
+    print(f"Closed issues: {closed_issues}")
+    total_issues = int(open_issues) + int(closed_issues)
+    print(f"total issues: {total_issues}")
+    return total_issues
+
+
+issues = number_of_issues()
+
+
+def number_of_pages():
+    if issues > 25:
+        last_page = soup.find("div", class_="pagination").text.strip().split(" ")[-2]
+        print(f"Total pages: {last_page}")
+        return last_page
+    return "1"
+
+
+total_pages = number_of_pages()
+
+for page in range(1, int(total_pages) + 1):
     print(f"Page: {page}")
     soup = scraping_site(
         f"https://github.com/backend-br/vagas/issues?page={page}&q=is%3Aissue+email+OR+mail+in%3Abody+label%3APython"
