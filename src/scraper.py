@@ -72,10 +72,48 @@ def number_of_pages():
         last_page = soup.find("div", class_="pagination").text.strip().split(" ")[-2]
         print(f"Total pages: {last_page}")
         return last_page
-    return "1"
+    return 1
 
 
 total_pages = number_of_pages()
+
+
+def insert_or_update_database():
+    try:
+        collection.insert_one(
+            {
+                "issue_number": issue_number,
+                "status": status,
+                "title": title,
+                "last_update": issue_date,
+                "labels": labels_list,
+                "author": author,
+                "author_page": url_author,
+                "email": EMAIL,
+                "url_issue": url_job,
+                "search_time": search_time,
+            }
+        )
+        print("Successfully added")
+    except DuplicateKeyError:
+        collection.update_one(
+            {"issue_number": issue_number},
+            {
+                "$set": {
+                    "status": status,
+                    "title": title,
+                    "last_update": issue_date,
+                    "labels": labels_list,
+                    "author": author,
+                    "author_page": url_author,
+                    "email": EMAIL,
+                    "url_issue": url_job,
+                    "search_time": search_time,
+                }
+            },
+        )
+        print("Successfully update")
+
 
 for page in range(1, int(total_pages) + 1):
     print(f"Page: {page}")
@@ -134,36 +172,5 @@ for page in range(1, int(total_pages) + 1):
             EMAIL = "not found"
             print(EMAIL)
         search_time = datetime.utcnow()
-        try:
-            collection.insert_one(
-                {
-                    "issue_number": issue_number,
-                    "status": status,
-                    "title": title,
-                    "last_update": issue_date,
-                    "labels": labels_list,
-                    "author": author,
-                    "author_page": url_author,
-                    "email": EMAIL,
-                    "url_issue": url_job,
-                    "search_time": search_time,
-                }
-            )
-        except DuplicateKeyError:
-            collection.update_one(
-                {"issue_number": issue_number},
-                {
-                    "$set": {
-                        "status": status,
-                        "title": title,
-                        "last_update": issue_date,
-                        "labels": labels_list,
-                        "author": author,
-                        "author_page": url_author,
-                        "email": EMAIL,
-                        "url_issue": url_job,
-                        "search_time": search_time,
-                    }
-                },
-            )
         print()
+        insert_or_update_database()
