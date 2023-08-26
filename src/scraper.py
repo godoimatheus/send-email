@@ -7,17 +7,27 @@ import pymongo
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from pymongo.errors import DuplicateKeyError
+from pymongo.errors import PyMongoError
 
-uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
-client = MongoClient(uri, server_api=ServerApi("1"))
-try:
-    client.admin.command("ping")
-    print("Conectando ao banco de dados")
-except Exception as e:
-    print(e)
-db = client["issues"]
-collection = db["vagas"]
-db["vagas"].create_index([("issue_number", pymongo.ASCENDING)], unique=True)
+
+def connect_to_database():
+    try:
+        uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
+        client = MongoClient(uri, server_api=ServerApi("1"))
+        client.admin.command("ping")
+        database = client["issues"]
+        database_collection = database["vagas"]
+        database_collection.create_index(
+            [("issue_number", pymongo.ASCENDING)], unique=True
+        )
+        print("Connecting to the database..")
+        return database_collection
+    except PyMongoError as erro:
+        print(erro)
+        return None
+
+
+collection = connect_to_database()
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -41,7 +51,7 @@ total_issues = int(open_issues) + int(closed_issues)
 print(f"total issues: {total_issues}")
 if total_issues > 25:
     last_page = soup.find("div", class_="pagination").text.strip().split(" ")[-2]
-    print(f"Total pages{last_page}")
+    print(f"Total pages: {last_page}")
 
 for page in range(1, int(last_page) + 1):
     print(f"Page: {page}")
@@ -102,7 +112,7 @@ for page in range(1, int(last_page) + 1):
             print(EMAIL)
         search_time = datetime.utcnow()
         try:
-            db["vagas"].insert_one(
+            collection.insert_one(
                 {
                     "issue_number": issue_number,
                     "status": status,
@@ -117,7 +127,7 @@ for page in range(1, int(last_page) + 1):
                 }
             )
         except DuplicateKeyError:
-            db["vagas"].update_one(
+            collection.update_one(
                 {"issue_number": issue_number},
                 {
                     "$set": {
