@@ -15,15 +15,16 @@ def connect_to_database():
         uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
         client = MongoClient(uri, server_api=ServerApi("1"))
         client.admin.command("ping")
+        print("Successfully connected to the database..")
         database = client["issues"]
         database_collection = database["vagas"]
         database_collection.create_index(
             [("issue_number", pymongo.ASCENDING)], unique=True
         )
-        print("Connecting to the database..")
+        print("Created index")
         return database_collection
     except PyMongoError as erro:
-        print(erro)
+        print("Error:", erro)
         return None
 
 
