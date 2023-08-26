@@ -30,14 +30,21 @@ def connect_to_database():
 
 collection = connect_to_database()
 
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
-}
 
-URL = "https://github.com/backend-br/vagas/issues?q=is%3Aissue+email+OR+mail+in%3Abody+label%3APython"
-site = requests.get(URL, headers=headers, timeout=10)
-soup = BeautifulSoup(site.content, "html.parser")
+def scraping_site(url):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
+    }
+    site = requests.get(url, headers=headers, timeout=10)
+    html_soup = BeautifulSoup(site.content, "html.parser")
+    return html_soup
+
+
+soup = scraping_site(
+    "https://github.com/backend-br/vagas/issues?q=is%3Aissue+email+OR+mail+in%3Abody+label%3APython"
+)
+
 open_issues = (
     soup.find("div", class_="flex-auto d-none d-lg-block no-wrap")
     .text.strip()
@@ -56,9 +63,9 @@ if total_issues > 25:
 
 for page in range(1, int(last_page) + 1):
     print(f"Page: {page}")
-    URL = f"https://github.com/backend-br/vagas/issues?page={page}&q=is%3Aissue+email+OR+mail+in%3Abody+label%3APython"
-    site = requests.get(URL, headers=headers, timeout=10)
-    soup = BeautifulSoup(site.content, "html.parser")
+    soup = scraping_site(
+        f"https://github.com/backend-br/vagas/issues?page={page}&q=is%3Aissue+email+OR+mail+in%3Abody+label%3APython"
+    )
     jobs = soup.find_all(
         "div",
         class_="Box-row Box-row--focus-gray p-0 mt-0 js-navigation-item js-issue-row",
@@ -102,8 +109,7 @@ for page in range(1, int(last_page) + 1):
         ).get("href")
         url_job = URL_GITHUB + link_job
         print(url_job)
-        site = requests.get(url_job, headers=headers, timeout=10)
-        soup = BeautifulSoup(site.content, "html.parser")
+        soup = scraping_site(url_job)
         job_detail = soup.find("div", class_="edit-comment-hide")
         try:
             EMAIL = job_detail.find(href=re.compile("mailto")).get_text()
