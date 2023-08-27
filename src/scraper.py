@@ -28,9 +28,6 @@ def connect_to_database():
         return None
 
 
-collection = connect_to_database()
-
-
 def scraping_site(url):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -41,136 +38,109 @@ def scraping_site(url):
     return html_soup
 
 
-soup = scraping_site(
-    "https://github.com/backend-br/vagas/issues?q=is%3Aissue+email+OR+mail+in%3Abody+label%3APython"
-)
-
-
-def number_of_issues():
+def get_number_of_issues(soup_num_issues):
     open_issues = (
-        soup.find("div", class_="flex-auto d-none d-lg-block no-wrap")
+        soup_num_issues.find("div", class_="flex-auto d-none d-lg-block no-wrap")
         .text.strip()
         .split(" ")[0]
     )
-    print(f"Open issues: {open_issues}")
     closed_issues = (
-        soup.find("div", class_="flex-auto d-none d-lg-block no-wrap")
+        soup_num_issues.find("div", class_="flex-auto d-none d-lg-block no-wrap")
         .text.strip()
         .split(" ")[-2]
     )
-    print(f"Closed issues: {closed_issues}")
     total_issues = int(open_issues) + int(closed_issues)
-    print(f"total issues: {total_issues}")
     return total_issues
 
 
-issues = number_of_issues()
-
-
-def number_of_pages():
-    if issues > 25:
+def get_number_of_pages(soup, total_issues):
+    if total_issues > 25:
         last_page = soup.find("div", class_="pagination").text.strip().split(" ")[-2]
         print(f"Total pages: {last_page}")
         return last_page
     return 1
 
 
-total_pages = number_of_pages()
-
-
-def insert_or_update_database():
+def insert_or_update_database(collection_db, issue_data_db):
     try:
-        collection.insert_one(
-            {
-                "issue_number": issue_number,
-                "status": status,
-                "title": title,
-                "last_update": issue_date,
-                "labels": labels_list,
-                "author": author,
-                "author_page": url_author,
-                "email": EMAIL,
-                "url_issue": url_job,
-                "search_time": search_time,
-            }
-        )
-        print("Successfully added")
+        collection_db.insert_one(issue_data_db)
+        print(f"{issue_data_db['issue_number']}: Successfully added")
     except DuplicateKeyError:
-        collection.update_one(
-            {"issue_number": issue_number},
-            {
-                "$set": {
-                    "status": status,
-                    "title": title,
-                    "last_update": issue_date,
-                    "labels": labels_list,
-                    "author": author,
-                    "author_page": url_author,
-                    "email": EMAIL,
-                    "url_issue": url_job,
-                    "search_time": search_time,
-                }
-            },
+        issue_data_db.pop("_id")
+        collection_db.update_one(
+            {"issue_number": issue_data_db["issue_number"]},
+            {"$set": issue_data_db},
         )
-        print("Successfully update")
+        print(f"{issue_data_db['issue_number']}: Successfully update")
 
 
-for page in range(1, int(total_pages) + 1):
-    print(f"Page: {page}")
-    soup = scraping_site(
-        f"https://github.com/backend-br/vagas/issues?page={page}&q=is%3Aissue+email+OR+mail+in%3Abody+label%3APython"
+if __name__ == "__main__":
+    collection = connect_to_database()
+    URL_GITHUB = "https://github.com"
+    BASE_URL = (
+        URL_GITHUB
+        + "/backend-br/vagas/issues?q=is%3Aissue+email+OR+mail+in%3Abody+label%3APython"
     )
-    jobs = soup.find_all(
-        "div",
-        class_="Box-row Box-row--focus-gray p-0 mt-0 js-navigation-item js-issue-row",
-    )
-    print(len(jobs))
-    for job in jobs:
-        issue_number = (
-            job.find("span", class_="opened-by").get_text().strip().split("\n")[0]
+    soup_base = scraping_site(BASE_URL)
+    get_number_of_issues(soup_base)
+    final_page = get_number_of_pages(soup_base, get_number_of_issues(soup_base))
+
+    for page in range(1, int(final_page) + 1):
+        print(f"Page: {page}")
+        page_url = (
+            URL_GITHUB
+            + f"/backend-br/vagas/issues?page={page}&q=is%3Aissue+email+OR+mail+in%3Abody+label%3APython"
         )
-        print(issue_number)
+        soup_issues = scraping_site(page_url)
+        jobs = soup_issues.find_all(
+            "div",
+            class_="Box-row Box-row--focus-gray p-0 mt-0 js-navigation-item js-issue-row",
+        )
 
-        status = job.find("span", class_="tooltipped tooltipped-e").get("aria-label")
-        print(status)
+        for job in jobs:
+            issue_data = {}
+            issue_data["issue_number"] = (
+                job.find("span", class_="opened-by").get_text().strip().split("\n")[0]
+            )
 
-        title = job.find(
-            class_="Link--primary v-align-middle no-underline h4 js-navigation-open markdown-title"
-        ).get_text()
-        print(title)
+            issue_data["status"] = job.find(
+                "span", class_="tooltipped tooltipped-e"
+            ).get("aria-label")
 
-        opened = job.find("relative-time").get("datetime")
-        issue_date = datetime.strptime(opened, "%Y-%m-%dT%H:%M:%SZ")
-        print(issue_date)
+            issue_data["title"] = job.find(
+                class_="Link--primary v-align-middle no-underline h4 js-navigation-open markdown-title"
+            ).get_text()
 
-        labels = job.find_all("a", class_="IssueLabel hx_IssueLabel")
-        labels_list = []
-        for label in labels:
-            labels_list.append(label.get_text().strip())
-        print(labels_list)
+            opened = job.find("relative-time").get("datetime")
+            issue_data["issue_date"] = datetime.strptime(opened, "%Y-%m-%dT%H:%M:%SZ")
 
-        author = job.find("a", class_="Link--muted").get_text()
-        print(author)
+            labels = job.find_all("a", class_="IssueLabel hx_IssueLabel")
+            labels_list = []
+            for label in labels:
+                labels_list.append(label.get_text().strip())
+            issue_data["labels_list"] = labels_list
 
-        URL_GITHUB = "https://github.com"
+            author = job.find("a", class_="Link--muted").get_text()
+            issue_data["author"] = author
 
-        url_author = URL_GITHUB + "/" + author
-        print(url_author)
+            issue_data["url_author"] = URL_GITHUB + "/" + author
 
-        link_job = job.find(
-            "a",
-            class_="Link--primary v-align-middle no-underline h4 js-navigation-open markdown-title",
-        ).get("href")
-        url_job = URL_GITHUB + link_job
-        print(url_job)
-        soup = scraping_site(url_job)
-        job_detail = soup.find("div", class_="edit-comment-hide")
-        try:
-            EMAIL = job_detail.find(href=re.compile("mailto")).get_text()
-            print(EMAIL)
-        except AttributeError:
-            EMAIL = "not found"
-            print(EMAIL)
-        search_time = datetime.utcnow()
-        print()
-        insert_or_update_database()
+            link_job = job.find(
+                "a",
+                class_="Link--primary v-align-middle no-underline h4 js-navigation-open markdown-title",
+            ).get("href")
+
+            # find email
+            url_job = URL_GITHUB + link_job
+            issue_data["url_job"] = url_job
+            soup_email = scraping_site(url_job)
+            job_detail = soup_email.find("div", class_="edit-comment-hide")
+            try:
+                EMAIL = job_detail.find(href=re.compile("mailto")).get_text()
+                issue_data["EMAIL"] = EMAIL
+            except AttributeError:
+                issue_data["EMAIL"] = "not found"
+
+            issue_data["search_time"] = datetime.utcnow()
+
+            insert_or_update_database(collection, issue_data)
