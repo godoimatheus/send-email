@@ -112,18 +112,18 @@ if __name__ == "__main__":
             ).get_text()
 
             opened = job.find("relative-time").get("datetime")
-            issue_data["issue_date"] = datetime.strptime(opened, "%Y-%m-%dT%H:%M:%SZ")
+            issue_data["last_update"] = datetime.strptime(opened, "%Y-%m-%dT%H:%M:%SZ")
 
             labels = job.find_all("a", class_="IssueLabel hx_IssueLabel")
             labels_list = []
             for label in labels:
                 labels_list.append(label.get_text().strip())
-            issue_data["labels_list"] = labels_list
+            issue_data["labels"] = labels_list
 
             author = job.find("a", class_="Link--muted").get_text()
             issue_data["author"] = author
 
-            issue_data["url_author"] = URL_GITHUB + "/" + author
+            issue_data["author_page"] = URL_GITHUB + "/" + author
 
             link_job = job.find(
                 "a",
@@ -132,15 +132,15 @@ if __name__ == "__main__":
 
             # find email
             url_job = URL_GITHUB + link_job
-            issue_data["url_job"] = url_job
+            issue_data["url_issue"] = url_job
             soup_email = scraping_site(url_job)
             job_detail = soup_email.find("div", class_="edit-comment-hide")
             try:
                 EMAIL = job_detail.find(href=re.compile("mailto")).get_text()
-                issue_data["EMAIL"] = EMAIL
+                issue_data["email"] = EMAIL
             except AttributeError:
-                issue_data["EMAIL"] = "not found"
+                issue_data["email"] = "not found"
 
             issue_data["search_time"] = datetime.utcnow()
-
+            issue_data["send"] = False
             insert_or_update_database(collection, issue_data)
