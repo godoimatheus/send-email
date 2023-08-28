@@ -142,5 +142,11 @@ if __name__ == "__main__":
                 pass
 
             issue_data["search_time"] = datetime.utcnow()
+
             issue_data["send"] = False
+
+            if issue_data["email"] in collection.distinct("email"):
+                send_status = collection.find_one({"email": issue_data["email"]})
+                issue_data["send"] = send_status["send"]
+
             insert_or_update_database(collection, issue_data)
