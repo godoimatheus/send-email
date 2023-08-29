@@ -18,7 +18,7 @@ O script "scraper.py" realiza a coleta de informações sobre vagas de emprego d
 
 O script "**send.py**" utiliza as informações armazenadas no banco de dados MongoDB para enviar e-mails personalizados para as empresas. Ele utiliza a biblioteca "**smtplib**" para enviar e-mails via SMTP e anexa um currículo em formato PDF ao e-mail.
 
-##  ## Funcionalidades
+#### Funcionalidades
 
 - Conecta-se a um banco de dados MongoDB para obter a lista de endereços de e-mail das empresas.
 - Envia e-mails personalizados com o assunto e corpo definidos.
