@@ -1,5 +1,7 @@
 [MAIN]
 
+init-hook='import sys; sys.path.append("/home/matheus/PycharmProjects/send-email/")'
+
 disable=
       C0116, # missing-function-docstring
       E0015, # unrecognized-option
@@ -11,6 +13,7 @@ disable=
       R0801, # Duplicate-code
       C0115, # missing-class-docstring
       R0903, # too-few-public-methods
+      E0401, # import-error
 
 
 # Analyse import fallback blocks. This can be used to support both Python 2 and
