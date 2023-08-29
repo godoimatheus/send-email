@@ -6,7 +6,7 @@ Este repositório contém dois scripts Python que trabalham em conjunto para rea
 
 O script "scraper.py" realiza a coleta de informações sobre vagas de emprego de um repositório GitHub. Ele utiliza a biblioteca "requests" para acessar as páginas do repositório, a biblioteca "BeautifulSoup" para fazer o parsing do conteúdo HTML e a biblioteca "pymongo" para interagir com o banco de dados MongoDB.
 
-#### Funcionalidades
+### Funcionalidades - Scraper
 
 - Conecta-se a um banco de dados MongoDB para armazenar as informações coletadas.
 - Realiza scraping das páginas do repositório para obter detalhes sobre as vagas de emprego.
@@ -18,7 +18,7 @@ O script "scraper.py" realiza a coleta de informações sobre vagas de emprego d
 
 O script "**send.py**" utiliza as informações armazenadas no banco de dados MongoDB para enviar e-mails personalizados para as empresas. Ele utiliza a biblioteca "**smtplib**" para enviar e-mails via SMTP e anexa um currículo em formato PDF ao e-mail.
 
-#### Funcionalidades
+### Funcionalidades - Envio de e-mails
 
 - Conecta-se a um banco de dados MongoDB para obter a lista de endereços de e-mail das empresas.
 - Envia e-mails personalizados com o assunto e corpo definidos.
