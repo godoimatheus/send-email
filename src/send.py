@@ -21,6 +21,7 @@ collection = db["vagas"]
 
 def send_email():
     email_list = collection.distinct("email", {"send": False})
+    print(f"Remaining emails: {len(email_list)}")
     for email in email_list[:50]:
         if email == "not found":
             continue
