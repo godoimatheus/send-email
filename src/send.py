@@ -2,8 +2,7 @@ import smtplib
 import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
-# from email.mime.application import MIMEApplication
+from email.mime.application import MIMEApplication
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from settings import MY_EMAIL, MY_PASSWORD
@@ -34,13 +33,13 @@ def send_email():
         body = MY_BODY
         msg.attach(MIMEText(body, "html"))
 
-        # pdf_path = "cv/curriculum.pdf"
-        # with open(pdf_path, "rb") as pdf:
-        #     pdf_att = MIMEApplication(pdf.read(), _subtype="pdf")
-        #     pdf_att.add_header(
-        #         "content-disposition", "attachment; filename=curriculum.pdf"
-        #     )
-        #     msg.attach(pdf_att)
+        pdf_path = "cv/curriculum.pdf"
+        with open(pdf_path, "rb") as pdf:
+            pdf_att = MIMEApplication(pdf.read(), _subtype="pdf")
+            pdf_att.add_header(
+                "content-disposition", "attachment; filename=curriculum.pdf"
+            )
+            msg.attach(pdf_att)
 
         smtp = smtplib.SMTP("smtp.gmail.com: 587")
         smtp.starttls()
