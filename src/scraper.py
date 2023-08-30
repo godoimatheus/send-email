@@ -139,7 +139,8 @@ if __name__ == "__main__":
                 EMAIL = job_detail.find(href=re.compile("mailto")).get_text()
                 issue_data["email"] = EMAIL
             except AttributeError:
-                pass
+                EMAIL = "not found"
+                issue_data["email"] = EMAIL
 
             issue_data["search_time"] = datetime.utcnow()
 
