@@ -1,6 +1,7 @@
 # Extração de e-mails e envio
 
 Este repositório contém dois scripts Python que trabalham em conjunto para realizar a coleta de informações sobre vagas de emprego em um repositório GitHub, armazenar esses dados em um banco de dados MongoDB e, em seguida, enviar e-mails personalizados para as empresas.
+*Atualmente somente issues com a label **Python** estão sendo buscadas.*
 
 ## Coletor de Informações de Vagas de Emprego (scraper.py)
 
@@ -17,6 +18,7 @@ O script "scraper.py" realiza a coleta de informações sobre vagas de emprego d
 ## Envio de E-mails para Candidatos (send.py)
 
 O script "**send.py**" utiliza as informações armazenadas no banco de dados MongoDB para enviar e-mails personalizados para as empresas. Ele utiliza a biblioteca "**smtplib**" para enviar e-mails via SMTP e anexa um currículo em formato PDF ao e-mail.
+> Atualmente estão sendo enviados 50 e-mails por vez, para evitar qualquer problema com o Gmail.
 
 ### Funcionalidades - Envio de e-mails
 
@@ -34,6 +36,7 @@ O script "**send.py**" utiliza as informações armazenadas no banco de dados Mo
 ## Uso
 
 1. Execute o script "**scraper.py**" para coletar as informações das vagas de emprego e armazená-las no banco de dados MongoDB.
-2. Em seguida, execute o script "**send.py**" para enviar e-mails personalizados para os candidatos interessados.
+2. Adicione seu currículo a pasta "**cv**" com o nome "**curriculum.pdf**".
+3. Em seguida, execute o script "**send.py**" para enviar e-mails personalizados para os candidatos interessados.
 
->Certifique-se de entender o funcionamento dos scripts e personalize-os conforme suas necessidades específicas. Lembre-se de respeitar as políticas de uso dos serviços utilizados, como GitHub e provedores de e-mail.
+> Certifique-se de entender o funcionamento dos scripts e personalize-os conforme suas necessidades específicas. Lembre-se de respeitar as políticas de uso dos serviços utilizados, como GitHub e provedores de e-mail.
