@@ -5,21 +5,26 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from pymongo.errors import PyMongoError
 from settings import MY_EMAIL, MY_PASSWORD
 from settings import MY_SUBJECT, MY_BODY
 
-uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
-client = MongoClient(uri, server_api=ServerApi("1"))
-try:
-    client.admin.command("ping")
-    print("Conectando ao banco de dados")
-except Exception as e:
-    print(e)
-db = client["issues"]
-collection = db["vagas"]
+
+def connect_to_database():
+    uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
+    client = MongoClient(uri, server_api=ServerApi("1"))
+    try:
+        client.admin.command("ping")
+        print("Successfully connected to the database..")
+    except PyMongoError as error:
+        print(error)
+    database = client["issues"]
+    collection = database["vagas"]
+    return collection
 
 
 def send_email():
+    collection = connect_to_database()
     email_list = collection.distinct("email", {"send": False})
     print(f"Remaining emails: {len(email_list)}")
     for email in email_list[:50]:
