@@ -1,16 +1,16 @@
 import unittest
-import requests
+from io import StringIO
+from unittest.mock import patch
+from src.scraper import connect_to_database
 
 
-class TestScraper(unittest.TestCase):
-    def test_status_request(self):
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
-        }
-        url = "https://github.com/backend-br/vagas/issues"
-        site = requests.get(url, headers=headers, timeout=10)
-        self.assertEqual(site.status_code, 200)
+class TestDatabase(unittest.TestCase):
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_connect_to_database(self, mock_stdout):
+        self.assertIsNotNone(connect_to_database())
+        self.assertIn(
+            "Successfully connected to the database...", mock_stdout.getvalue()
+        )
 
 
 if __name__ == "__main__":
