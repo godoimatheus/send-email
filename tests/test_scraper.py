@@ -1,6 +1,6 @@
 import unittest
 from io import StringIO
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from pymongo.collection import Collection
 from pymongo.errors import PyMongoError
 from src import scraper
@@ -25,6 +25,16 @@ class TestDatabase(unittest.TestCase):
         mock_instance.admin.command.side_effect = PyMongoError("Error")
         result = scraper.connect_to_database()
         self.assertIsNone(result)
+
+
+class TestScraping(unittest.TestCase):
+    @patch("requests.get")
+    @patch("bs4.BeautifulSoup")
+    def test_scraping_site(self, mock_bs4, mock_requests):
+        mock_requests.return_value.content = b"HTML content"
+        mock_bs4.return_value = Mock()
+        result = scraper.scraping_site("https://example.com")
+        self.assertIsNotNone(result)
 
 
 if __name__ == "__main__":
