@@ -1,7 +1,7 @@
 import unittest
-from io import StringIO
 from unittest.mock import patch
-from src.scraper import connect_to_database
+from io import StringIO
+from src.send import connect_to_database
 
 
 class TestDatabase(unittest.TestCase):
