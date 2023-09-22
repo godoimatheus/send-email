@@ -1,13 +1,13 @@
 import unittest
 from io import StringIO
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 from pymongo.collection import Collection
-from pymongo.errors import PyMongoError
+from pymongo.errors import PyMongoError, DuplicateKeyError
 from bs4 import BeautifulSoup
 from src import scraper
 
 
-class TestDatabase(unittest.TestCase):
+class TestDatabaseConnection(unittest.TestCase):
     @patch("sys.stdout", new_callable=StringIO)
     def test_connect_to_database(self, mock_stdout):
         result = scraper.connect_to_database()
@@ -79,3 +79,55 @@ class TestScraping(unittest.TestCase):
         total_issues = 425
         last_page = scraper.get_number_of_pages(soup, total_issues)
         self.assertEqual(int(last_page), 17)
+
+
+class TestDatabaseInsertOrUpdate(unittest.TestCase):
+    def setUp(self) -> None:
+        self.database = scraper.connect_to_database()
+        self.collection = MagicMock()
+        self.issue_data_insert = {
+            "_id": 1,
+            "issue_number": "#123456",
+            "status": "Closed as not planned issue",
+            "title": "Title of issue",
+            "last_update": "2023-01-01T00:49:33.000+00:00",
+            "labels": ["Python", "Django", "Flask"],
+            "author": "NameOfAuthor",
+            "author_page": "https://github.com/NameOfAuthor",
+            "url_issue": "https://github.com/backend-br/vagas/issues/123456",
+            "email": "nameofauthor@email.com",
+            "search_time": "2023-08-01T00:49:33.000+00:00",
+            "send": False,
+        }
+        self.issue_data_update = {
+            "_id": 1,
+            "issue_number": "#123456",
+            "status": "Open",
+            "title": "Title of issue",
+            "last_update": "2023-01-01T00:49:33.000+00:00",
+            "labels": ["Python", "Django", "Flask"],
+            "author": "NameOfAuthor",
+            "author_page": "https://github.com/NameOfAuthor",
+            "url_issue": "https://github.com/backend-br/vagas/issues/123456",
+            "email": "nameofauthor@email.com",
+            "search_time": "2023-08-01T00:49:33.000+00:00",
+            "send": False,
+        }
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_insert_one_to_database(self, mock_stdout):
+        scraper.insert_or_update_database(self.collection, self.issue_data_insert)
+        self.collection.insert_one.assert_called_with(self.issue_data_insert)
+        self.assertIn(
+            f"{self.issue_data_insert['issue_number']}: Successfully added",
+            mock_stdout.getvalue(),
+        )
+
+    @patch("sys.stdout", new_callable=StringIO)
+    def test_update_one_in_database(self, mock_stdout):
+        self.collection.insert_one.side_effect = DuplicateKeyError("test error")
+        scraper.insert_or_update_database(self.collection, self.issue_data_insert)
+        self.assertIn(
+            f"{self.issue_data_update['issue_number']}: Successfully update",
+            mock_stdout.getvalue(),
+        )
