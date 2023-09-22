@@ -15,7 +15,7 @@ def connect_to_database():
         uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
         client = MongoClient(uri, server_api=ServerApi("1"))
         client.admin.command("ping")
-        print("Successfully connected to the database..")
+        print("Successfully connected to the database...")
         database = client["issues"]
         database_collection = database["vagas"]
         database_collection.create_index(
